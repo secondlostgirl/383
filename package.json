@@ -1,0 +1,14 @@
+{
+  "name": "seng383-child-dev-platform",
+  "private": true,
+  "workspaces": [
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w server",
+    "start": "npm start -w server",
+    "seed": "npm run seed -w server",
+    "test": "npm test -w server",
+    "lint": "npm run lint -w server"
+  }
+}
