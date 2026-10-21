@@ -11,9 +11,11 @@
     "seed": "npm run seed -w server",
     "test": "npm test -w server && npm test -w client",
     "lint": "npm run lint -w server && npm run lint -w client",
-    "build": "npm run build -w client"
+    "build": "npm run build -w client",
+    "test:e2e": "playwright test -c e2e"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "concurrently": "^10.0.6"
   }
 }
