@@ -20,7 +20,11 @@ _TBD (M4-02)_
 
 ## Running tests
 
-_TBD (M4-02)_
+```
+npm test                         # server (Jest + Supertest) + client (Vitest)
+npx playwright install chromium  # once, before the first E2E run
+npm run test:e2e                 # Playwright, starts the app itself (AI_MODE=mock)
+```
 
 ## Demo accounts
 
