@@ -37,8 +37,8 @@ All of them use the password **`Demo1234!`**.
 | Parent | `murat.parent@demo.test` | Parent of Ece |
 | Child | `deniz.child@demo.test` | Deniz Demir |
 | Child | `ece.child@demo.test` | Ece Kaya |
-| Specialist | `selin.specialist@demo.test` | Speech therapist, linked to Deniz |
-| Specialist | `can.specialist@demo.test` | Physiotherapist, linked to Ece |
+| Specialist | `selin.specialist@demo.test` | Special education teacher, linked to Deniz |
+| Specialist | `can.specialist@demo.test` | Coach, linked to Ece |
 | Specialist | `zeynep.specialist@demo.test` | Not linked to any child |
 
 Events, tasks and observations are dated relative to the week you run the seed, so the

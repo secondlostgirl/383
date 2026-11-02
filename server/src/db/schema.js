@@ -3,6 +3,8 @@
 // Changing an existing table? Run `npm run seed` to recreate the local DB.
 
 const ROLES = ['parent', 'specialist', 'child'];
+// Specialist kinds named in the assignment (section 3.1).
+const SPECIALIST_TYPES = ['teacher', 'psychologist', 'doctor', 'special_education_teacher', 'coach'];
 const DEVELOPMENT_AREAS = ['language', 'motor', 'cognitive', 'social_emotional', 'self_care'];
 const TASK_STATUSES = ['pending', 'done'];
 const DOCUMENT_MIME_TYPES = ['application/pdf', 'image/png', 'image/jpeg'];
@@ -35,7 +37,7 @@ const STATEMENTS = [
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     child_id        INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE,
     specialist_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    specialist_type TEXT NOT NULL,
+    specialist_type TEXT NOT NULL CHECK (specialist_type IN (${list(SPECIALIST_TYPES)})),
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE (child_id, specialist_id)
   )`,
@@ -122,6 +124,7 @@ function initSchema(db) {
 module.exports = {
   initSchema,
   ROLES,
+  SPECIALIST_TYPES,
   DEVELOPMENT_AREAS,
   TASK_STATUSES,
   DOCUMENT_MIME_TYPES,
