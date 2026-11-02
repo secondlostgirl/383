@@ -22,6 +22,8 @@ git clone https://github.com/secondlostgirl/383.git
 cd 383
 npm ci                      # installs server + client (npm workspaces)
 cp .env.example .env        # Windows (cmd): copy .env.example .env
+                            # then open .env and set JWT_SECRET to a long random string, e.g.
+                            # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 npm run seed                # creates server/data/app.sqlite with synthetic data
 npm run dev                 # backend on http://localhost:3001, frontend on http://localhost:5173
 ```
