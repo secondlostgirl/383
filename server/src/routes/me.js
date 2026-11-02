@@ -1,20 +1,12 @@
-// /api/me/* – data about the signed-in user.
+// /api/me/* – data about the signed-in user (req.user is set by `authenticate`).
 const express = require('express');
 const { getDb } = require('../db/connection');
 const links = require('../services/links');
 
 const router = express.Router();
 
-// TODO(S2G1-20): `authenticate` will set req.user; until then every call is 401.
-function requireUser(req, res, next) {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  return next();
-}
-
 // Specialist → children linked right now (M2-03); parent → own children.
-router.get('/children', requireUser, (req, res) => {
+router.get('/children', (req, res) => {
   const db = getDb();
   switch (req.user.role) {
     case 'specialist':

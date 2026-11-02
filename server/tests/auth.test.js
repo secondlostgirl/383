@@ -82,3 +82,62 @@ describe('M1 POST /api/auth/login', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('M1 authenticate middleware and GET /api/auth/me', () => {
+  const me = (authHeader) => {
+    const req = request(app).get('/api/auth/me');
+    return authHeader ? req.set('Authorization', authHeader) : req;
+  };
+  const sign = (claims, options = {}, secret = process.env.JWT_SECRET) => jwt.sign(
+    claims, secret, { subject: String(ids.users.elif), expiresIn: '1h', ...options },
+  );
+
+  it('returns the signed-in user for the token from login', async () => {
+    const { body } = await login({ email: 'elif.parent@demo.test', password: DEMO_PASSWORD });
+
+    const res = await me(`Bearer ${body.token}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ user: body.user });
+  });
+
+  it.each([
+    ['no Authorization header', undefined],
+    ['a non-Bearer scheme', 'Basic abc'],
+    ['an empty Bearer token', 'Bearer '],
+    ['a malformed token', 'Bearer not.a.jwt'],
+  ])('returns 401 for %s', async (_label, header) => {
+    expect((await me(header)).status).toBe(401);
+  });
+
+  it('returns 401 for an expired token', async () => {
+    const token = sign({ role: 'parent' }, { expiresIn: -10 });
+    expect((await me(`Bearer ${token}`)).status).toBe(401);
+  });
+
+  it('returns 401 for a token signed with another secret', async () => {
+    const token = sign({ role: 'parent' }, {}, 'some-other-secret');
+    expect((await me(`Bearer ${token}`)).status).toBe(401);
+  });
+
+  it('returns 401 for an unsigned (alg: none) token', async () => {
+    const token = jwt.sign({ role: 'parent' }, null, {
+      subject: String(ids.users.elif), algorithm: 'none',
+    });
+    expect((await me(`Bearer ${token}`)).status).toBe(401);
+  });
+
+  it('returns 401 when the account was deleted after login', async () => {
+    const { body } = await login({ email: 'zeynep.specialist@demo.test', password: DEMO_PASSWORD });
+    getDb().prepare('DELETE FROM users WHERE id = ?').run(ids.users.zeynep);
+
+    expect((await me(`Bearer ${body.token}`)).status).toBe(401);
+  });
+
+  it('takes the role from the account, not from the token', async () => {
+    // Token claims "specialist", but the account is a parent
+    const token = sign({ role: 'specialist' });
+
+    const res = await me(`Bearer ${token}`);
+    expect(res.body.user.role).toBe('parent');
+  });
+});

@@ -3,6 +3,7 @@ const authRouter = require('./routes/auth');
 const tasksRouter = require('./routes/tasks');
 const specialistsRouter = require('./routes/specialists');
 const meRouter = require('./routes/me');
+const authenticate = require('./middleware/authenticate');
 
 const app = express();
 
@@ -13,12 +14,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authRouter); // POST /login is public, GET /me authenticates itself
+
+// --- Everything below requires a valid JWT (secure by default) ------------
+app.use('/api', authenticate);
 
 app.use('/api/tasks', tasksRouter);
-
-// Protected routes below. `authenticate` (S2G1-20) must run before them and
-// set req.user = { id, role }; without it they answer 401.
 app.use('/api/children/:childId/specialists', specialistsRouter);
 app.use('/api/me', meRouter);
 

@@ -206,12 +206,10 @@ describe('M2-03 GET /api/me/children', () => {
   });
 });
 
-describe('M2 routes without authentication middleware', () => {
-  it('are closed (401) in the real app until authenticate is added', async () => {
-    const request = require('supertest');
-    const app = require('../src/app');
-
-    expect((await request(app).get(specialistsUrl('deniz'))).status).toBe(401);
-    expect((await request(app).get('/api/me/children')).status).toBe(401);
+describe('M2 routes require authentication', () => {
+  it('answer 401 to anonymous requests', async () => {
+    expect((await asUser(null).get(specialistsUrl('deniz'))).status).toBe(401);
+    expect((await asUser(null).post(specialistsUrl('deniz'))).status).toBe(401);
+    expect((await asUser(null).delete(`${specialistsUrl('deniz')}/1`)).status).toBe(401);
   });
 });

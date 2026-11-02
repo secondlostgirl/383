@@ -3,6 +3,7 @@
 const express = require('express');
 const { getDb } = require('../db/connection');
 const { verifyCredentials, signToken } = require('../services/auth');
+const authenticate = require('../middleware/authenticate');
 
 const router = express.Router();
 
@@ -21,6 +22,11 @@ router.post('/login', (req, res) => {
   }
 
   return res.json({ token: signToken(user), user });
+});
+
+// The signed-in user; the client calls this on start-up to restore a session.
+router.get('/me', authenticate, (req, res) => {
+  res.json({ user: req.user });
 });
 
 module.exports = router;
