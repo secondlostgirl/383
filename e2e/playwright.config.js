@@ -16,7 +16,8 @@ module.exports = defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'npm run dev',
+    // Seed first so the walking-skeleton task exists
+    command: 'npm run seed && npm run dev',
     cwd: '..',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
