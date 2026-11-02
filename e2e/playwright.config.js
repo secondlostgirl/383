@@ -22,6 +22,6 @@ module.exports = defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
-    env: { AI_MODE: 'mock' },
+    env: { AI_MODE: 'mock', JWT_SECRET: 'e2e-only-jwt-secret' },
   },
 });
