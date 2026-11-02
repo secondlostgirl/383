@@ -1,7 +1,7 @@
 // Resets the database and fills it with synthetic data only.
 const fs = require('fs');
 const { getDb, closeDb, resolveDbPath } = require('./connection');
-const { insertSampleTasks } = require('./sampleData');
+const { insertDemoData, DEMO_PASSWORD, USERS } = require('./sampleData');
 
 function seed() {
   const dbPath = resolveDbPath();
@@ -9,12 +9,14 @@ function seed() {
     fs.rmSync(dbPath);
   }
 
-  const db = getDb();
-  // More seed data is added per module (M1-05).
-  insertSampleTasks(db);
+  insertDemoData(getDb());
 
   closeDb();
   console.log(`Database reset: ${dbPath}`);
+  console.log(`Demo accounts (password: ${DEMO_PASSWORD}):`);
+  for (const u of Object.values(USERS)) {
+    console.log(`  ${u.role.padEnd(10)} ${u.email}`);
+  }
 }
 
 seed();
