@@ -13,6 +13,14 @@ export function setToken(token) {
   }
 }
 
+// Called when the API rejects our token (expired, account deleted, ...).
+// AuthProvider registers a handler that signs the user out.
+let unauthorizedHandler = null
+
+export function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = handler
+}
+
 export class ApiError extends Error {
   constructor(message, status) {
     super(message)
@@ -39,6 +47,11 @@ export async function apiFetch(path, { body, headers, ...options } = {}) {
   const data = isJson ? await response.json() : null
 
   if (!response.ok) {
+    // A 401 while we sent a token means the session is over
+    if (response.status === 401 && token) {
+      setToken(null)
+      unauthorizedHandler?.()
+    }
     throw new ApiError(data?.error || response.statusText, response.status)
   }
   return data
