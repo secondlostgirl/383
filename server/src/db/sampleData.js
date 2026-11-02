@@ -21,19 +21,19 @@ const CHILDREN = {
 
 // zeynep is a registered specialist with no link (for "unlinked → 403" cases).
 const LINKS = [
-  { child: 'deniz', specialist: 'selin', type: 'speech_therapist' },
-  { child: 'ece', specialist: 'can', type: 'physiotherapist' },
+  { child: 'deniz', specialist: 'selin', type: 'special_education_teacher' },
+  { child: 'ece', specialist: 'can', type: 'coach' },
 ];
 
 // week: 0 = current week, -1 = last week, 1 = next week; day: 0 = Monday
 const EVENTS = [
-  { child: 'deniz', by: 'selin', title: 'Speech therapy session', week: 0, day: 1, start: '10:00', end: '10:45' },
+  { child: 'deniz', by: 'selin', title: 'Special education session', week: 0, day: 1, start: '10:00', end: '10:45' },
   { child: 'deniz', by: 'elif', title: 'Swimming class', week: 0, day: 3, start: '16:00', end: '17:00' },
-  { child: 'deniz', by: 'selin', title: 'Speech therapy session', week: -1, day: 1, start: '10:00', end: '10:45' },
+  { child: 'deniz', by: 'selin', title: 'Special education session', week: -1, day: 1, start: '10:00', end: '10:45' },
   { child: 'deniz', by: 'elif', title: 'Paediatrician check-up', week: 1, day: 2, start: '09:30', end: '10:00' },
-  { child: 'ece', by: 'can', title: 'Physiotherapy session', week: 0, day: 2, start: '14:00', end: '14:45' },
+  { child: 'ece', by: 'can', title: 'Movement coaching session', week: 0, day: 2, start: '14:00', end: '14:45' },
   { child: 'ece', by: 'murat', title: 'Art workshop', week: 0, day: 5, start: '11:00', end: '12:30' },
-  { child: 'ece', by: 'can', title: 'Physiotherapy session', week: 1, day: 2, start: '14:00', end: '14:45' },
+  { child: 'ece', by: 'can', title: 'Movement coaching session', week: 1, day: 2, start: '14:00', end: '14:45' },
 ];
 
 // The first task is the walking-skeleton task checked by the E2E smoke test.

@@ -56,7 +56,7 @@ describe('M1-05 database schema', () => {
     const db = getDb();
     const ids = insertDemoData(db);
     const insert = db.prepare(
-      "INSERT INTO specialist_links (child_id, specialist_id, specialist_type) VALUES (?, ?, 'x')",
+      "INSERT INTO specialist_links (child_id, specialist_id, specialist_type) VALUES (?, ?, 'teacher')",
     );
     expect(() => insert.run(ids.children.deniz, ids.users.selin)).toThrow(/UNIQUE constraint failed/);
   });
