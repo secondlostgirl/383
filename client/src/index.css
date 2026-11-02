@@ -136,3 +136,28 @@ button.secondary {
   border: 1px solid #9ae6b4;
   color: #276749;
 }
+
+/* --- Page building blocks ------------------------------------------------- */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stack > h1 {
+  margin-bottom: 0;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.form-row > .field {
+  flex: 1 1 220px;
+}
+
+.narrow {
+  max-width: 320px;
+}

@@ -9,7 +9,10 @@ const ROLE_LABELS = {
 
 // Navigation entries per role; later modules add their pages here.
 const NAV_ITEMS = {
-  parent: [{ to: '/parent', label: 'Home' }],
+  parent: [
+    { to: '/parent', label: 'Home' },
+    { to: '/parent/specialists', label: 'Linked specialists' },
+  ],
   specialist: [{ to: '/specialist', label: 'Home' }],
   child: [{ to: '/child', label: 'Home' }],
 }

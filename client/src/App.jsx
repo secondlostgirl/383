@@ -4,6 +4,7 @@ import ProtectedRoute from './auth/ProtectedRoute.jsx'
 import AppLayout from './components/AppLayout.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
+import LinkedSpecialistsPage from './pages/parent/LinkedSpecialistsPage.jsx'
 import { ChildHomePage, ParentHomePage, SpecialistHomePage } from './pages/RoleHomePages.jsx'
 
 // "/" sends signed-in users to their own home screen
@@ -23,6 +24,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route element={<ProtectedRoute roles={['parent']} />}>
             <Route path="/parent" element={<ParentHomePage />} />
+            <Route path="/parent/specialists" element={<LinkedSpecialistsPage />} />
           </Route>
           <Route element={<ProtectedRoute roles={['specialist']} />}>
             <Route path="/specialist" element={<SpecialistHomePage />} />
