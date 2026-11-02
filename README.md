@@ -12,20 +12,30 @@ React (Vite) · Node.js + Express · SQLite · JWT · Jest / Supertest / Vitest 
 
 ## Prerequisites
 
-_TBD (M4-02)_
+- **Node.js 22 LTS** (the version CI uses) and npm 10+. Check with `node -v`.
+- Git.
 
 ## Setup
 
-_TBD (M4-02)_
-
-## Running tests
-
 ```
-npm test                         # server (Jest + Supertest) + client (Vitest)
-npx playwright install chromium  # once, before the first E2E run
-npm run test:e2e                 # Playwright, starts the app itself (AI_MODE=mock)
+git clone https://github.com/secondlostgirl/383.git
+cd 383
+npm ci                      # installs server + client (npm workspaces)
+cp .env.example .env        # Windows (cmd): copy .env.example .env
+                            # then open .env and set JWT_SECRET to a long random string, e.g.
+                            # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+npm run seed                # creates server/data/app.sqlite with synthetic data
+npm run dev                 # backend on http://localhost:3001, frontend on http://localhost:5173
 ```
 
-## Demo accounts
+Open http://localhost:5173. The backend health check is at http://localhost:3001/api/health.
 
-_TBD (M1-05)_
+### Windows troubleshooting: `npm ci` fails on `better-sqlite3`
+
+If `npm ci` stops with `gyp ERR!` while building `better-sqlite3`, npm is trying to compile it
+although the package already ships a prebuilt Windows binary. Fix it in one of these ways:
+
+1. **Skip the native build** (quickest): delete `node_modules`, then run `npm ci --ignore-scripts`.
+   The bundled prebuilt binary is used and `npm run seed`, `npm run dev` and `npm test` work.
+2. Or install the C++ build tools: Visual Studio Build Tools with the
+   "Desktop development with C++" workload, plus Python 3, then run `npm ci` again.
