@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { apiFetch } from '../../api/client.js'
+import LinkedSpecialistsList from './LinkedSpecialistsList.jsx'
 import LinkSpecialistForm from './LinkSpecialistForm.jsx'
 
-// M2 – parent: link specialists to a child (assignment Appendix A.6).
+// M2 – parent: link, list and unlink specialists (assignment Appendix A.6).
 export default function LinkedSpecialistsPage() {
   const [children, setChildren] = useState(null)
   const [childId, setChildId] = useState('')
   const [loadError, setLoadError] = useState('')
   const [notice, setNotice] = useState('')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     apiFetch('/me/children')
@@ -22,6 +24,11 @@ export default function LinkedSpecialistsPage() {
 
   function handleLinked(specialist) {
     setNotice(`${specialist.name} is now linked to ${child.name}.`)
+    setRefreshKey((k) => k + 1)
+  }
+
+  function handleUnlinked(specialist) {
+    setNotice(`${specialist.name} was unlinked and can no longer see ${child.name}'s records.`)
   }
 
   function handleChildChange(event) {
@@ -65,7 +72,17 @@ export default function LinkedSpecialistsPage() {
         </p>
       )}
 
-      {child && <LinkSpecialistForm key={child.id} child={child} onLinked={handleLinked} />}
+      {child && (
+        <>
+          <LinkedSpecialistsList
+            key={child.id}
+            child={child}
+            refreshKey={refreshKey}
+            onUnlinked={handleUnlinked}
+          />
+          <LinkSpecialistForm key={`form-${child.id}`} child={child} onLinked={handleLinked} />
+        </>
+      )}
     </section>
   )
 }

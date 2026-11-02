@@ -120,3 +120,100 @@ describe('M2 Linked specialists page – link form (S2G1-23)', () => {
     expect(await screen.findByRole('heading', { name: 'Specialist dashboard' })).toBeInTheDocument()
   })
 })
+
+const SELIN = {
+  id: 5, name: 'Selin Arslan', email: 'selin.specialist@demo.test',
+  specialistType: 'special_education_teacher', linkedAt: '2026-10-20 09:30:00',
+}
+
+describe('M2 Linked specialists page – list and unlink (S2G1-25)', () => {
+  it('lists the linked specialists with type and date', async () => {
+    setup({ 'GET /api/children/1/specialists': () => [200, { specialists: [SELIN] }] })
+
+    const table = await screen.findByRole('table')
+    const row = within(table).getByRole('row', { name: /Selin Arslan/ })
+    expect(row).toHaveTextContent('selin.specialist@demo.test')
+    expect(row).toHaveTextContent('Special education teacher')
+    expect(row).toHaveTextContent('2026-10-20')
+  })
+
+  it('shows an empty state', async () => {
+    setup()
+    expect(await screen.findByText('No specialists are linked to Deniz Demir yet.')).toBeInTheDocument()
+  })
+
+  it('reloads the list after a new link', async () => {
+    let specialists = []
+    const { user } = setup({
+      'GET /api/children/1/specialists': () => [200, { specialists }],
+      'POST /api/children/1/specialists': () => {
+        specialists = [ZEYNEP]
+        return [201, { specialist: ZEYNEP }]
+      },
+    })
+
+    await submitLink(user, 'zeynep.specialist@demo.test', 'Psychologist')
+
+    expect(await screen.findByRole('row', { name: /Zeynep Sahin/ })).toBeInTheDocument()
+  })
+
+  it('asks for confirmation; Cancel keeps the link', async () => {
+    const { fetchMock, user } = setup({
+      'GET /api/children/1/specialists': () => [200, { specialists: [SELIN] }],
+    })
+
+    await user.click(await screen.findByRole('button', { name: 'Unlink Selin Arslan' }))
+    const dialog = screen.getByRole('alertdialog', { name: 'Unlink Selin Arslan?' })
+    expect(dialog).toHaveTextContent("Selin Arslan will immediately lose access to all of Deniz Demir's records.")
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /Selin Arslan/ })).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([, o]) => o?.method === 'DELETE')).toBe(false)
+  })
+
+  it('closes the dialog with Escape', async () => {
+    const { user } = setup({
+      'GET /api/children/1/specialists': () => [200, { specialists: [SELIN] }],
+    })
+
+    await user.click(await screen.findByRole('button', { name: 'Unlink Selin Arslan' }))
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('unlinks after confirmation and confirms it', async () => {
+    const { fetchMock, user } = setup({
+      'GET /api/children/1/specialists': () => [200, { specialists: [SELIN] }],
+      'DELETE /api/children/1/specialists/5': () => [204, undefined],
+    })
+
+    await user.click(await screen.findByRole('button', { name: 'Unlink Selin Arslan' }))
+    await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Unlink' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      "Selin Arslan was unlinked and can no longer see Deniz Demir's records.",
+    )
+    expect(screen.queryByRole('row', { name: /Selin Arslan/ })).not.toBeInTheDocument()
+    const deleted = fetchMock.mock.calls.some(
+      ([url, o]) => o?.method === 'DELETE' && url === '/api/children/1/specialists/5',
+    )
+    expect(deleted).toBe(true)
+  })
+
+  it('shows an error and keeps the row when unlinking fails', async () => {
+    const { user } = setup({
+      'GET /api/children/1/specialists': () => [200, { specialists: [SELIN] }],
+      'DELETE /api/children/1/specialists/5': () => [500, { error: 'Internal server error' }],
+    })
+
+    await user.click(await screen.findByRole('button', { name: 'Unlink Selin Arslan' }))
+    await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Unlink' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not unlink Selin Arslan. Please try again.')
+    expect(screen.getByRole('row', { name: /Selin Arslan/ })).toBeInTheDocument()
+  })
+})

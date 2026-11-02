@@ -11,7 +11,9 @@ export const USERS = {
 }
 
 function jsonResponse(body, status = 200) {
-  return new Response(body === undefined ? null : JSON.stringify(body), {
+  // Like Express: no body and no Content-Type for e.g. 204 No Content
+  if (body === undefined) return new Response(null, { status })
+  return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
   })
