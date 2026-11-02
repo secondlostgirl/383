@@ -30,22 +30,10 @@ Open http://localhost:5173. The backend health check is at http://localhost:3001
 
 ### Windows troubleshooting: `npm ci` fails on `better-sqlite3`
 
-If `npm ci` stops with `gyp ERR!` while building `better-sqlite3`, npm found no prebuilt binary
-for your Node version and tried to compile it. Fix it in one of these ways:
+If `npm ci` stops with `gyp ERR!` while building `better-sqlite3`, npm is trying to compile it
+although the package already ships a prebuilt Windows binary. Fix it in one of these ways:
 
-1. **Use Node 22 LTS** (recommended). With [nvm-windows](https://github.com/coreybutler/nvm-windows):
-   `nvm install 22` then `nvm use 22`, delete `node_modules`, and run `npm ci` again.
+1. **Skip the native build** (quickest): delete `node_modules`, then run `npm ci --ignore-scripts`.
+   The bundled prebuilt binary is used and `npm run seed`, `npm run dev` and `npm test` work.
 2. Or install the C++ build tools: Visual Studio Build Tools with the
    "Desktop development with C++" workload, plus Python 3, then run `npm ci` again.
-
-## Running tests
-
-```
-npm test                         # server (Jest + Supertest) + client (Vitest)
-npx playwright install chromium  # once, before the first E2E run
-npm run test:e2e                 # Playwright, starts the app itself (AI_MODE=mock)
-```
-
-## Demo accounts
-
-_TBD (M1-05)_
