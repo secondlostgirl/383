@@ -1,26 +1,23 @@
 process.env.DB_PATH = ':memory:';
 
-const request = require('supertest');
-const app = require('../src/app');
 const { getDb, closeDb } = require('../src/db/connection');
 const { TASKS, insertDemoData } = require('../src/db/sampleData');
+const { asUser } = require('./helpers/asUser');
 
 describe('GET /api/tasks (walking skeleton)', () => {
+  let elif;
+
+  beforeEach(() => {
+    const ids = insertDemoData(getDb());
+    elif = { id: ids.users.elif, role: 'parent' };
+  });
+
   afterEach(() => {
     closeDb();
   });
 
-  it('returns an empty list when there are no tasks', async () => {
-    const res = await request(app).get('/api/tasks');
-
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ tasks: [] });
-  });
-
-  it('returns the seeded tasks from SQLite', async () => {
-    insertDemoData(getDb());
-
-    const res = await request(app).get('/api/tasks');
+  it('returns the seeded tasks from SQLite to a signed-in user', async () => {
+    const res = await asUser(elif).get('/api/tasks');
 
     expect(res.status).toBe(200);
     expect(res.body.tasks).toHaveLength(TASKS.length);
@@ -29,5 +26,17 @@ describe('GET /api/tasks (walking skeleton)', () => {
       title: 'Read a picture book for 15 minutes',
       status: 'pending',
     });
+  });
+
+  it('returns an empty list when there are no tasks', async () => {
+    getDb().exec('DELETE FROM tasks');
+
+    const res = await asUser(elif).get('/api/tasks');
+    expect(res.body).toEqual({ tasks: [] });
+  });
+
+  it('is not readable anonymously', async () => {
+    const res = await asUser(null).get('/api/tasks');
+    expect(res.status).toBe(401);
   });
 });

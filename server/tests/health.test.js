@@ -9,10 +9,13 @@ describe('GET /api/health', () => {
     expect(res.body).toEqual({ status: 'ok' });
   });
 
-  it('returns 404 JSON for unknown API routes', async () => {
-    const res = await request(app).get('/api/does-not-exist');
+  it('needs no authentication', async () => {
+    const res = await request(app).get('/api/health').set('Authorization', 'Bearer not-a-token');
+    expect(res.status).toBe(200);
+  });
 
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: 'Not found' });
+  it('answers 401 (not 404) to anonymous requests for unknown API routes', async () => {
+    const res = await request(app).get('/api/does-not-exist');
+    expect(res.status).toBe(401);
   });
 });

@@ -4,20 +4,13 @@ const express = require('express');
 const { getDb } = require('../db/connection');
 const { SPECIALIST_TYPES } = require('../db/schema');
 const loadChildAccess = require('../middleware/loadChildAccess');
+const requireRole = require('../middleware/requireRole');
 const links = require('../services/links');
 
 const router = express.Router({ mergeParams: true });
 
-// loadChildAccess already guarantees a parent here is the child's own parent.
-// TODO(S2G1-21): replace with requireRole('parent') once it exists.
-function parentOnly(req, res, next) {
-  if (req.user.role !== 'parent') {
-    return res.status(403).json({ error: 'Only the parent can manage specialists' });
-  }
-  return next();
-}
-
-router.use(loadChildAccess, parentOnly);
+// Only parents manage links; loadChildAccess then makes sure it is their own child.
+router.use(requireRole('parent'), loadChildAccess);
 
 router.get('/', (req, res) => {
   res.json({ specialists: links.listLinkedSpecialists(getDb(), req.child.id) });
