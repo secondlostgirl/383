@@ -1,6 +1,5 @@
 const express = require('express');
 const authRouter = require('./routes/auth');
-const tasksRouter = require('./routes/tasks');
 const specialistsRouter = require('./routes/specialists');
 const meRouter = require('./routes/me');
 const authenticate = require('./middleware/authenticate');
@@ -19,7 +18,6 @@ app.use('/api/auth', authRouter); // POST /login is public, GET /me authenticate
 // --- Everything below requires a valid JWT (secure by default) ------------
 app.use('/api', authenticate);
 
-app.use('/api/tasks', tasksRouter);
 app.use('/api/children/:childId/specialists', specialistsRouter);
 app.use('/api/me', meRouter);
 
