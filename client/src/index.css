@@ -136,3 +136,80 @@ button.secondary {
   border: 1px solid #9ae6b4;
   color: #276749;
 }
+
+/* --- Page building blocks ------------------------------------------------- */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stack > h1 {
+  margin-bottom: 0;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.form-row > .field {
+  flex: 1 1 220px;
+}
+
+.narrow {
+  max-width: 320px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 8px;
+  border-bottom: 1px solid #d9e2ec;
+  text-align: left;
+}
+
+.list {
+  padding-left: 20px;
+}
+
+button.danger {
+  background: #c53030;
+  border-color: #c53030;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* --- Dialog --------------------------------------------------------------- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(16 42 67 / 45%);
+}
+
+.dialog {
+  max-width: 440px;
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}

@@ -44,7 +44,8 @@ export async function apiFetch(path, { body, headers, ...options } = {}) {
   })
 
   const isJson = response.headers.get('content-type')?.includes('application/json')
-  const data = isJson ? await response.json() : null
+  // 204 No Content (e.g. DELETE) has no body to parse
+  const data = isJson && response.status !== 204 ? await response.json() : null
 
   if (!response.ok) {
     // A 401 while we sent a token means the session is over
