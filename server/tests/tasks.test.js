@@ -13,6 +13,7 @@ const elif = () => user('elif', 'parent');
 const selin = () => user('selin', 'specialist');
 const deniz = () => user('deniz', 'child');
 const tasksUrl = (childKey) => `/api/children/${ids.children[childKey]}/tasks`;
+const statusUrl = (taskId) => `/api/tasks/${taskId}/status`;
 
 const newTask = (overrides = {}) => ({
   title: 'Name five animals',
@@ -21,6 +22,8 @@ const newTask = (overrides = {}) => ({
   dueDate: '2026-11-20',
   ...overrides,
 });
+
+const taskIdByTitle = (title) => getDb().prepare('SELECT id FROM tasks WHERE title = ?').get(title).id;
 
 beforeEach(() => {
   ids = insertDemoData(getDb());
@@ -168,6 +171,134 @@ describe('M4 GET /api/children/:childId/tasks', () => {
 
   it('returns 401 without a signed-in user', async () => {
     const res = await asUser(null).get(tasksUrl('deniz'));
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('M4 PATCH /api/tasks/:taskId/status (child marks done)', () => {
+  const pendingTitle = 'Read a picture book for 15 minutes';
+  const doneTitle = 'Practise the /r/ sound with 10 picture cards';
+
+  it('lets the child mark their own task as done', async () => {
+    const taskId = taskIdByTitle(pendingTitle);
+    const res = await asUser(deniz()).patch(statusUrl(taskId)).send({ status: 'done' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.task).toMatchObject({ id: taskId, status: 'done', completedAt: expect.any(String) });
+  });
+
+  it('lets the assigner see the new status right away', async () => {
+    const taskId = taskIdByTitle(pendingTitle);
+    await asUser(deniz()).patch(statusUrl(taskId)).send({ status: 'done' });
+
+    const res = await asUser(elif()).get('/api/tasks/assigned-by-me');
+    expect(res.body.tasks.find((t) => t.id === taskId).status).toBe('done');
+  });
+
+  it('keeps the first completion time when a done task is marked done again', async () => {
+    const taskId = taskIdByTitle(doneTitle);
+    const before = getDb().prepare('SELECT completed_at FROM tasks WHERE id = ?').get(taskId).completed_at;
+
+    const res = await asUser(deniz()).patch(statusUrl(taskId)).send({ status: 'done' });
+    expect(res.body.task.completedAt).toBe(before);
+  });
+
+  it('lets the child undo a done task back to pending', async () => {
+    const taskId = taskIdByTitle(doneTitle);
+    const res = await asUser(deniz()).patch(statusUrl(taskId)).send({ status: 'pending' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.task).toMatchObject({ status: 'pending', completedAt: null });
+  });
+
+  it.each([
+    ['a missing status', {}],
+    ['an unknown status', { status: 'approved' }],
+  ])('returns 400 for %s', async (_label, body) => {
+    const res = await asUser(deniz()).patch(statusUrl(taskIdByTitle(pendingTitle))).send(body);
+    expect(res.status).toBe(400);
+  });
+
+  it.each([
+    ['the parent', () => elif()],
+    ['the linked specialist who assigned it', () => selin()],
+  ])('returns 403 for %s, who can see but not complete the task', async (_label, who) => {
+    const taskId = taskIdByTitle(doneTitle);
+    const res = await asUser(who()).patch(statusUrl(taskId)).send({ status: 'pending' });
+
+    expect(res.status).toBe(403);
+    expect(getDb().prepare('SELECT status FROM tasks WHERE id = ?').get(taskId).status).toBe('done');
+  });
+
+  it.each([
+    ['another child', () => user('ece', 'child')],
+    ['an unlinked specialist', () => user('zeynep', 'specialist')],
+    ['another child\'s parent', () => user('murat', 'parent')],
+  ])('returns 404 for %s, so the task does not leak', async (_label, who) => {
+    const taskId = taskIdByTitle(pendingTitle);
+    const res = await asUser(who()).patch(statusUrl(taskId)).send({ status: 'done' });
+
+    expect(res.status).toBe(404);
+    expect(getDb().prepare('SELECT status FROM tasks WHERE id = ?').get(taskId).status).toBe('pending');
+  });
+
+  it.each(['9999', 'abc', '0'])('returns 404 for task id %s', async (taskId) => {
+    const res = await asUser(deniz()).patch(statusUrl(taskId)).send({ status: 'done' });
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without a signed-in user', async () => {
+    const res = await asUser(null).patch(statusUrl(taskIdByTitle(pendingTitle))).send({ status: 'done' });
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('M4 GET /api/tasks/assigned-by-me', () => {
+  const titlesBy = (key) => TASKS.filter((t) => t.by === key).map((t) => t.title).sort();
+
+  it.each([
+    ['a parent', 'elif', 'parent'],
+    ['a specialist', 'selin', 'specialist'],
+    ['another specialist', 'can', 'specialist'],
+  ])('lists only the tasks %s assigned, with status and due date', async (_label, key, role) => {
+    const res = await asUser(user(key, role)).get('/api/tasks/assigned-by-me');
+
+    expect(res.status).toBe(200);
+    expect(res.body.tasks.map((t) => t.title).sort()).toEqual(titlesBy(key));
+    for (const task of res.body.tasks) {
+      expect(task.assignedBy.id).toBe(ids.users[key]);
+      expect(['pending', 'done']).toContain(task.status);
+      expect(isIsoDate(task.dueDate)).toBe(true);
+      expect(task.childName).toEqual(expect.any(String));
+    }
+  });
+
+  it('includes a task right after it is assigned', async () => {
+    const created = await asUser(selin()).post(tasksUrl('deniz')).send(newTask());
+
+    const res = await asUser(selin()).get('/api/tasks/assigned-by-me');
+    expect(res.body.tasks.map((t) => t.id)).toContain(created.body.task.id);
+  });
+
+  it('hides tasks of a child the specialist was unlinked from', async () => {
+    await asUser(elif()).delete(`/api/children/${ids.children.deniz}/specialists/${ids.users.selin}`);
+
+    const res = await asUser(selin()).get('/api/tasks/assigned-by-me');
+    expect(res.body.tasks).toEqual([]);
+  });
+
+  it('returns an empty list for a specialist who assigned nothing', async () => {
+    const res = await asUser(user('zeynep', 'specialist')).get('/api/tasks/assigned-by-me');
+    expect(res.body.tasks).toEqual([]);
+  });
+
+  it('returns 403 for a child', async () => {
+    const res = await asUser(deniz()).get('/api/tasks/assigned-by-me');
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 401 without a signed-in user', async () => {
+    const res = await asUser(null).get('/api/tasks/assigned-by-me');
     expect(res.status).toBe(401);
   });
 });

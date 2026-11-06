@@ -1,7 +1,7 @@
 // Tasks (M4): parents and linked specialists assign, the child marks done,
 // the assigner follows the status. Access checks happen in the routes
 // (loadChildAccess / canAccessChild); this module only reads and writes rows.
-const { DEVELOPMENT_AREAS } = require('../db/schema');
+const { DEVELOPMENT_AREAS, TASK_STATUSES } = require('../db/schema');
 
 const TITLE_MAX = 200;
 const DESCRIPTION_MAX = 2000;
@@ -92,6 +92,35 @@ function listChildTasks(db, childId) {
     .map(toTask);
 }
 
+// Tasks the user assigned, limited to children the user may still access:
+// a specialist no longer sees tasks of a child they were unlinked from.
+function listAssignedBy(db, user) {
+  const accessible = user.role === 'specialist'
+    ? 'EXISTS (SELECT 1 FROM specialist_links l WHERE l.child_id = t.child_id AND l.specialist_id = @userId)'
+    : 'c.parent_id = @userId';
+  return db
+    .prepare(`
+      SELECT ${TASK_COLUMNS} ${FROM_TASKS}
+      WHERE t.assigned_by = @userId AND ${accessible}
+      ${ORDER}
+    `)
+    .all({ userId: user.id })
+    .map(toTask);
+}
+
+// status: 'done' sets completed_at (kept if it was already done),
+// 'pending' clears it (undo a mistaken tap).
+function setTaskStatus(db, taskId, status) {
+  if (!TASK_STATUSES.includes(status)) throw new Error(`Unknown task status: ${status}`);
+  db.prepare(`
+    UPDATE tasks
+    SET status = @status,
+        completed_at = CASE WHEN @status = 'done' THEN COALESCE(completed_at, datetime('now')) END
+    WHERE id = @taskId
+  `).run({ taskId, status });
+  return getTask(db, taskId);
+}
+
 module.exports = {
   TITLE_MAX,
   DESCRIPTION_MAX,
@@ -100,4 +129,6 @@ module.exports = {
   getTask,
   createTask,
   listChildTasks,
+  listAssignedBy,
+  setTaskStatus,
 };
