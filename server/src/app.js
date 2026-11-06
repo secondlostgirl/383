@@ -2,6 +2,7 @@ const express = require('express');
 const authRouter = require('./routes/auth');
 const specialistsRouter = require('./routes/specialists');
 const meRouter = require('./routes/me');
+const childTasksRouter = require('./routes/childTasks');
 const authenticate = require('./middleware/authenticate');
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/api/auth', authRouter); // POST /login is public, GET /me authenticate
 app.use('/api', authenticate);
 
 app.use('/api/children/:childId/specialists', specialistsRouter);
+app.use('/api/children/:childId/tasks', childTasksRouter);
 app.use('/api/me', meRouter);
 
 // Unknown API routes
